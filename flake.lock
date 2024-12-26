@@ -1,0 +1,60 @@
+{
+  "nodes": {
+    "fan-control": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1698501344,
+        "narHash": "sha256-TuilsK62MovO9WpwUlQTf9K1ClDFk2P3exWYiITONs0=",
+        "owner": "pymumu",
+        "repo": "fan-control-rock5b",
+        "rev": "3a119fa4783223dfed4a73474761b883ee425cf0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pymumu",
+        "repo": "fan-control-rock5b",
+        "type": "github"
+      }
+    },
+    "nixos-hardware": {
+      "locked": {
+        "lastModified": 1734954597,
+        "narHash": "sha256-QIhd8/0x30gEv8XEE1iAnrdMlKuQ0EzthfDR7Hwl+fk=",
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "rev": "def1d472c832d77885f174089b0d34854b007198",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1734649271,
+        "narHash": "sha256-4EVBRhOjMDuGtMaofAIqzJbg4Ql7Ai0PSeuVZTHjyKQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d70bd19e0a38ad4790d3913bf08fcbfc9eeca507",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "fan-control": "fan-control",
+        "nixos-hardware": "nixos-hardware",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
