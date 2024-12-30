@@ -1,7 +1,7 @@
 { config, pkgs, ... }: let
   secrets = import ./secrets.nix;
 in {
-  boot.kernelPackages = pkgs.linuxPackages_6_6;
+  boot.kernelPackages = pkgs.linuxPackages_testing;
 
   networking = {
     networkmanager.enable = true;
