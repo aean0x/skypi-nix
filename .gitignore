@@ -1,1 +1,4 @@
 secrets.nix
+result/
+*.qcow2
+*.img
