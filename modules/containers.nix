@@ -4,15 +4,7 @@
   lib,
   ...
 }: let
-  secrets = let
-    hasSecrets = builtins.pathExists ../secrets.nix;
-    defaultSecrets = import ../secrets.example.nix;
-  in
-    if hasSecrets
-    then import ../secrets.nix
-    else defaultSecrets;
-
-  # Helper function to create volume services
+  secrets = import ./home/secrets.nix;
   mkVolumeService = name: {
     description = "Create ${name} volume";
     wantedBy = ["multi-user.target"];
@@ -26,7 +18,6 @@
     '';
   };
 
-  # Container volumes
   volumes = [
     "nextcloud-data"
     "homeassistant-config"
@@ -61,7 +52,6 @@ in {
     };
   };
 
-  # Generate volume creation services
   systemd.services =
     lib.genAttrs
     (map (name: "create-${name}") volumes)

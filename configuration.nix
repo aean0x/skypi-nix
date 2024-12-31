@@ -1,21 +1,16 @@
 {
   config,
   pkgs,
+  lib,
+  inputs,
   ...
 }: let
-  secrets = let
-    hasSecrets = builtins.pathExists ./secrets.nix;
-    defaultSecrets = import ./secrets.example.nix;
-  in
-    if hasSecrets
-    then import ./secrets.nix
-    else defaultSecrets;
+  secrets = import ./secrets.nix;
 in {
-  boot.kernelPackages = pkgs.linuxPackages_testing;
-
   networking = {
+    hostName = secrets.hostName;
+
     networkmanager.enable = true;
-    # Disable wireless to avoid conflict with NetworkManager
     wireless.enable = false;
     firewall = {
       enable = true;
@@ -26,17 +21,33 @@ in {
     };
   };
 
-  time.timeZone = "UTC";
-
-  users.users.${secrets.adminUser} = {
-    description = secrets.description;
-    isNormalUser = true;
-    group = secrets.adminUser;
-    hashedPassword = secrets.hashedPassword;
-    openssh.authorizedKeys.keys = secrets.sshKeys;
+  security = {
+    sudo.wheelNeedsPassword = false;
+    polkit.enable = true;
   };
 
-  users.groups.${secrets.adminUser} = {};
+  boot = {
+    kernelPackages = pkgs.linuxPackages_testing;
+    loader = {
+      grub.enable = false;
+      systemd-boot.enable = false;
+      generic-extlinux-compatible.enable = true;
+    };
+  };
+
+  time.timeZone = "UTC";
+
+  users = {
+    users.${secrets.adminUser} = {
+      description = secrets.description;
+      isNormalUser = true;
+      group = secrets.adminUser;
+      hashedPassword = secrets.hashedPassword;
+      openssh.authorizedKeys.keys = secrets.sshKeys;
+    };
+
+    groups.${secrets.adminUser} = {};
+  };
 
   services.openssh = {
     enable = true;
@@ -46,6 +57,5 @@ in {
     };
   };
 
-  security.polkit.enable = true;
   system.stateVersion = "24.11";
 }
