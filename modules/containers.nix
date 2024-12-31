@@ -4,7 +4,11 @@
   lib,
   ...
 }: let
-  secrets = import ../secrets.nix;
+  secrets = let
+    hasSecrets = builtins.pathExists ../secrets.nix;
+    defaultSecrets = import ../secrets.example.nix;
+  in
+    if hasSecrets then import ../secrets.nix else defaultSecrets;
 
   # Helper function to create volume services
   mkVolumeService = name: {
