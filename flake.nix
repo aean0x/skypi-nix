@@ -21,7 +21,9 @@
       hasSecrets = builtins.pathExists ./secrets.nix;
       defaultSecrets = import ./secrets.example.nix;
     in
-      if hasSecrets then import ./secrets.nix else defaultSecrets;
+      if hasSecrets
+      then import ./secrets.nix
+      else defaultSecrets;
     lib = nixpkgs.lib;
     system = "aarch64-linux";
 
@@ -31,7 +33,7 @@
 
     commonModules = [
       ./configuration.nix
-      ./modules/zfs.nix
+      # ./modules/zfs.nix
       ./modules/podman.nix
       ./modules/cockpit.nix
       ./modules/containers.nix

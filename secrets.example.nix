@@ -11,4 +11,4 @@
       adminpass = "REPLACE_WITH_NEXTCLOUD_ADMIN_PASSWORD";
     };
   };
-} 
+}
