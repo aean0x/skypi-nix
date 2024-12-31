@@ -10,11 +10,17 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixos-hardware, fan-control, ... } @ inputs: let
+  outputs = {
+    self,
+    nixpkgs,
+    nixos-hardware,
+    fan-control,
+    ...
+  } @ inputs: let
     secrets = import ./secrets.nix;
     lib = nixpkgs.lib;
     system = "aarch64-linux";
-    
+
     pkgs = import nixpkgs {
       inherit system;
     };
@@ -46,16 +52,24 @@
   in {
     nixosConfigurations.${secrets.hostName} = lib.nixosSystem {
       inherit system;
-      modules = [
-        baseConfiguration
-        ./hardware-configuration.nix
-      ] ++ commonModules;
+      modules =
+        [
+          baseConfiguration
+          ./hardware-configuration.nix
+        ]
+        ++ commonModules;
       specialArgs = {
         inherit fan-control;
       };
     };
 
+    # Add SD image as a package output
+    packages.${system} = {
+      sdImage = self.nixosConfigurations.${secrets.hostName}.config.system.build.sdImage;
+      default = self.packages.${system}.sdImage;
+    };
+
     # Simple check to verify the configuration
     checks.${system}.default = self.nixosConfigurations.${secrets.hostName}.config.system.build.toplevel;
   };
-} 
+}

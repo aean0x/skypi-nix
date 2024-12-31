@@ -1,5 +1,9 @@
-{ config, pkgs, ... }: {
-  boot.supportedFilesystems = [ "zfs" ];
+{
+  config,
+  pkgs,
+  ...
+}: {
+  boot.supportedFilesystems = ["zfs"];
   boot.zfs.forceImportRoot = false;
 
   services.zfs = {
@@ -22,4 +26,4 @@
     zfs
     zfs-prune-snapshots
   ];
-} 
+}

@@ -1,4 +1,8 @@
-{ config, pkgs, ... }: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   services.cockpit = {
     enable = true;
     port = 9090;
@@ -16,7 +20,7 @@
 
   # Enable required system services
   services.udisks2.enable = true;
-  
+
   # Additional security settings for Cockpit
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
@@ -26,4 +30,4 @@
       }
     });
   '';
-} 
+}

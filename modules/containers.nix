@@ -1,10 +1,15 @@
-{ config, pkgs, lib, ... }: let
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
   secrets = import ../secrets.nix;
-  
+
   # Helper function to create volume services
   mkVolumeService = name: {
     description = "Create ${name} volume";
-    wantedBy = [ "multi-user.target" ];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -51,7 +56,8 @@ in {
   };
 
   # Generate volume creation services
-  systemd.services = lib.genAttrs 
+  systemd.services =
+    lib.genAttrs
     (map (name: "create-${name}") volumes)
     (name: mkVolumeService (lib.removePrefix "create-" name));
-} 
+}

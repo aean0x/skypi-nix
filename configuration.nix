@@ -1,4 +1,8 @@
-{ config, pkgs, ... }: let
+{
+  config,
+  pkgs,
+  ...
+}: let
   secrets = import ./secrets.nix;
 in {
   boot.kernelPackages = pkgs.linuxPackages_testing;
@@ -9,9 +13,9 @@ in {
     wireless.enable = false;
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 
-        22    # SSH
-        9090  # Cockpit
+      allowedTCPPorts = [
+        22 # SSH
+        9090 # Cockpit
       ];
     };
   };
@@ -38,4 +42,4 @@ in {
 
   security.polkit.enable = true;
   system.stateVersion = "24.11";
-} 
+}

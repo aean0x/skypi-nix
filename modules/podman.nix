@@ -1,4 +1,8 @@
-{ config, pkgs, ... }: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   virtualisation = {
     podman = {
       enable = true;
@@ -17,12 +21,12 @@
   ];
 
   # Enable cgroups v2
-  boot.kernelParams = [ "systemd.unified_cgroup_hierarchy=1" ];
+  boot.kernelParams = ["systemd.unified_cgroup_hierarchy=1"];
 
   # Create default podman network with DNS
   systemd.services.podman-network-default = {
     description = "Create default podman network";
-    wantedBy = [ "multi-user.target" ];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -32,4 +36,4 @@
       ${pkgs.podman}/bin/podman network create podman
     '';
   };
-} 
+}

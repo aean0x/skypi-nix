@@ -1,4 +1,8 @@
-{ config, pkgs, ... }: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   # Basic X11 and XFCE setup
   services = {
     xserver = {
@@ -19,8 +23,8 @@
   # X11VNC server configuration
   systemd.services.x11vnc = {
     description = "X11VNC Remote Desktop Server";
-    after = [ "display-manager.service" ];
-    wantedBy = [ "multi-user.target" ];
+    after = ["display-manager.service"];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "simple";
       ExecStart = ''
@@ -41,8 +45,8 @@
   ];
 
   # Open VNC port in firewall
-  networking.firewall.allowedTCPPorts = [ 5900 ];
+  networking.firewall.allowedTCPPorts = [5900];
 
   # Enable dbus for XFCE
   services.dbus.enable = true;
-} 
+}

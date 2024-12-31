@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }: {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
   options.services.rock5b-fan-control = {
     enable = lib.mkEnableOption "Rock 5B fan control";
     package = lib.mkPackageOption pkgs "fan-control-rock5b" {};
@@ -69,4 +74,4 @@
 
     environment.etc."fan-control.json".text = builtins.toJSON config.services.rock5b-fan-control.settings;
   };
-} 
+}
