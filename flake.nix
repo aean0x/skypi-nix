@@ -23,8 +23,9 @@
       inherit system;
       modules =
         [
-          ./hardware-configuration.nix
           ./configuration.nix
+          ./modules/kernel.nix
+          ./modules/partitions.nix
           ./modules/zfs.nix
           ./modules/podman.nix
           ./modules/cockpit.nix
@@ -39,13 +40,6 @@
       sdImage = self.nixosConfigurations.${secrets.hostName}.config.system.build.sdImage;
       default = self.packages.${system}.sdImage;
     };
-
-    boot.kernelPackages = pkgs.linuxPackages_testing.overrideAttrs (oldAttrs: {
-      buildInputs = oldAttrs.buildInputs ++ [
-        "/home/aean/skypi-nix/linux-6.13-rc4"
-        "/usr/local/include"
-      ];
-    });
 
     checks.${system}.default = self.nixosConfigurations.${secrets.hostName}.config.system.build.toplevel;
   };
