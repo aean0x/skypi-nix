@@ -2,7 +2,9 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  secrets = import ../secrets.nix;
+in {
   # Basic X11 and XFCE setup
   services = {
     xserver = {
@@ -16,7 +18,7 @@
 
     displayManager.autoLogin = {
       enable = true;
-      user = "admin";
+      user = secrets.adminUser;
     };
   };
 

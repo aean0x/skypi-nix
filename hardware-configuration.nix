@@ -44,8 +44,7 @@
       "hid_generic"
       "uas"
       "usb_storage"
-      "sdhci_arasan"
-      "dwmmc_rockchip"
+      "sdhci_of_dwcmshc"
     ];
     kernelModules = [];
     extraModulePackages = [];
