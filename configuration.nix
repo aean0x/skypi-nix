@@ -26,13 +26,10 @@ in {
     polkit.enable = true;
   };
 
-  boot = {
-    kernelPackages = pkgs.linuxPackages_testing;
-    loader = {
-      grub.enable = false;
-      systemd-boot.enable = false;
-      generic-extlinux-compatible.enable = true;
-    };
+  boot.loader = {
+    grub.enable = false;
+    systemd-boot.enable = false;
+    generic-extlinux-compatible.enable = true;
   };
 
   time.timeZone = "UTC";
