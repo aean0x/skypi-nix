@@ -76,6 +76,31 @@
     CONFIG_ROCKCHIP_MINI_DSI=y
   '';
 
+  kernelPatches = [
+    {
+      name = "rk3588-platform-support";
+      patch = null;
+      extraStructuredConfig = with lib.kernel; {
+        ARCH_ROCKCHIP = yes;
+        ARCH_RK3588 = yes;
+        ARM64_VA_BITS_48 = yes;
+      };
+    }
+  ] ++ lib.optionals (!config.sdImage.enable) [
+    {
+      name = "zfs-kernel-config";
+      patch = null;
+      extraStructuredConfig = with lib.kernel; {
+        ZFS = module;
+        ZLIB_DEFLATE = yes;
+        ZLIB_INFLATE = yes;
+        CRYPTO_SHA256 = yes;
+        CRYPTO_SHA512 = yes;
+        CRYPTO_AES = yes;
+      };
+    }
+  ];
+
   kernelPackagesCustom = pkgs.linuxPackagesFor (
     pkgs.linux_testing.override {
       argsOverride = {
@@ -84,29 +109,7 @@
         modDirVersion = modDirVersion;
         configfile = defconfig;
       };
-      kernelPatches = [
-        {
-          name = "rk3588-platform-support";
-          patch = null;
-          extraStructuredConfig = with lib.kernel; {
-            ARCH_ROCKCHIP = yes;
-            ARCH_RK3588 = yes;
-            ARM64_VA_BITS_48 = yes;
-          };
-        }
-        {
-          name = "zfs-kernel-config";
-          patch = null;
-          extraStructuredConfig = with lib.kernel; {
-            ZFS = module;
-            ZLIB_DEFLATE = yes;
-            ZLIB_INFLATE = yes;
-            CRYPTO_SHA256 = yes;
-            CRYPTO_SHA512 = yes;
-            CRYPTO_AES = yes;
-          };
-        }
-      ];
+      inherit kernelPatches;
     }
   );
 in {
@@ -129,13 +132,13 @@ in {
       "ext2" "ext4" "sd_mod" "sr_mod" "mmc_block"
       "uhci_hcd" "ehci_hcd" "ehci_pci" "ohci_hcd" "ohci_pci"
       "xhci_hcd" "xhci_pci" "hid_generic" "uas" "usb_storage"
-      "sdhci_of_dwcmshc" "zfs"
-    ];
+      "sdhci_of_dwcmshc"
+    ] ++ lib.optionals (!config.sdImage.enable) [ "zfs" ];
 
-    kernelModules = [ "zfs" ];
+    kernelModules = lib.optionals (!config.sdImage.enable) [ "zfs" ];
     extraModulePackages = [];
   };
 
-  boot.supportedFilesystems = [ "ext4" "vfat" "zfs" ];
-  boot.zfs.forceImportRoot = false;
+  boot.supportedFilesystems = [ "ext4" "vfat" ] 
+    ++ lib.optionals (!config.sdImage.enable) [ "zfs" ];
 }

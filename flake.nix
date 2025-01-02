@@ -40,7 +40,7 @@
     };
   in
   {
-    # System configurations
+    # Full system configuration (for running on target)
     nixosConfigurations.${secrets.hostName} = nixpkgs.lib.nixosSystem {
       system = targetSystem;
       pkgs = nativePkgs;
@@ -48,8 +48,8 @@
         commonModules
         ./configuration.nix
         ./modules/kernel.nix
-        ./modules/partitions.nix
-        ./modules/zfs.nix
+        ./modules/partitions/common.nix
+        ./modules/partitions/zfs-pools.nix
         ./modules/podman.nix
         ./modules/cockpit.nix
         ./modules/containers.nix
@@ -58,18 +58,25 @@
       ];
     };
 
-    # Cross-compiled SD image
+    # Minimal SD card image (bootstrap configuration)
     nixosConfigurations."${secrets.hostName}-sdimage" = nixpkgs.lib.nixosSystem {
       system = targetSystem;
       pkgs = crossPkgs;
       modules = [
         commonModules
         ./configuration.nix
-        ./modules/cross-compile.nix
         ./modules/kernel.nix
-        ./modules/partitions.nix
-        ./modules/zfs.nix
-        { sdImage.enable = true; }
+        ./modules/partitions/common.nix
+        ./modules/cross-compile.nix
+        ./modules/remote-desktop.nix
+        { 
+          sdImage.enable = true;
+          # Disable optional services for minimal image
+          services.openssh.enable = lib.mkForce true;  # Keep SSH for initial access
+          services.cockpit.enable = lib.mkForce false;
+          virtualisation.podman.enable = lib.mkForce false;
+          services.xserver.enable = lib.mkForce false;
+        }
       ];
     };
 
