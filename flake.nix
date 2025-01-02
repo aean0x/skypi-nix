@@ -50,7 +50,7 @@
       pkgs = crossPkgs;
       specialArgs = { inherit secrets; };
       modules = [
-        "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+        "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./hosts/common
         ./hosts/sdcard
       ];
@@ -58,7 +58,7 @@
 
     # Build products
     packages.${hostSystem} = {
-      sdImage = self.nixosConfigurations."${secrets.hostName}-sdimage".config.system.build.sdImage;
+      sdImage = self.nixosConfigurations."${secrets.hostName}-sdimage".config.system.build.isoImage;
       default = self.packages.${hostSystem}.sdImage;
     };
   };

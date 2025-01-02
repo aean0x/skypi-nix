@@ -18,11 +18,11 @@ in {
     ];
 
     # Minimal environment variables for cross-compilation
-    environment.variables = {
-      NIX_CFLAGS_COMPILE = lib.optionalString (pkgs.stdenv.buildPlatform != pkgs.stdenv.hostPlatform) ''
-        -I${crossGlibcDev}/include
-        -I${crossGccInc}
-      '';
-    };
+    # environment.variables = {
+    #   NIX_CFLAGS_COMPILE = lib.optionalString (pkgs.stdenv.buildPlatform != pkgs.stdenv.hostPlatform) ''
+    #     -I${crossGlibcDev}/include
+    #     -I${crossGccInc}
+    #   '';
+    # };
   };
 } 

@@ -1,5 +1,5 @@
 # Main system configuration for ROCK5 ITX
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, secrets, ... }:
 
 {
   imports = [
@@ -17,14 +17,14 @@
   ];
 
   # System configuration
-  networking.hostName = config.secrets.hostName;
+  networking.hostName = secrets.hostName;
   networking.useDHCP = true;
 
   # User configuration
-  users.users.${config.secrets.adminUser} = {
+  users.users.${secrets.adminUser} = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" ];
-    openssh.authorizedKeys.keys = config.secrets.sshKeys;
+    openssh.authorizedKeys.keys = secrets.sshKeys;
   };
 
   # Enable SSH access
@@ -46,4 +46,6 @@
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
+
+  system.stateVersion = "25.05";
 } 
