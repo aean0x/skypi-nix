@@ -1,5 +1,6 @@
 { lib, pkgs, config, ... }: let
   kernelVersion = "6.13-rc5";
+  modDirVersion = "6.13.0-rc5";
 
   kernelSrc = pkgs.fetchurl {
     url    = "https://git.kernel.org/torvalds/t/linux-${kernelVersion}.tar.gz";
@@ -80,7 +81,7 @@
       argsOverride = {
         src = kernelSrc;
         version = kernelVersion;
-        modDirVersion = kernelVersion;
+        modDirVersion = modDirVersion;
         configfile = defconfig;
       };
       kernelPatches = [

@@ -13,34 +13,47 @@
   outputs = { self, nixpkgs, nixos-hardware, fan-control, ... }:
   let
     secrets = import ./secrets.nix;
-    system = "aarch64-linux";
-    pkgs = import nixpkgs {
+    hostSystem = "x86_64-linux";
+    targetSystem = "aarch64-linux";
+    
+    pkgsForSystem = system: import nixpkgs {
       inherit system;
+      config.allowBroken = true;
+    };
+
+    pkgsForCross = import nixpkgs {
+      system = hostSystem;
+      crossSystem = {
+        config = "aarch64-unknown-linux-gnu";
+        system = targetSystem;
+      };
+      config.allowBroken = true;
     };
   in
   {
+    devShells.${hostSystem}.default = 
+      let pkgs = pkgsForSystem hostSystem;
+      in import ./shell.nix { inherit pkgs; };
+
     nixosConfigurations.${secrets.hostName} = nixpkgs.lib.nixosSystem {
-      inherit system;
-      modules =
-        [
-          ./configuration.nix
-          ./modules/kernel.nix
-          ./modules/partitions.nix
-          ./modules/zfs.nix
-          ./modules/podman.nix
-          ./modules/cockpit.nix
-          ./modules/containers.nix
-          ./modules/remote-desktop.nix
-          ./modules/fan-control.nix
-        ];
-      specialArgs = {};
+      system = targetSystem;
+      pkgs = pkgsForCross;
+      modules = [
+        ./configuration.nix
+        ./modules/kernel.nix
+        ./modules/partitions.nix
+        ./modules/zfs.nix
+        ./modules/podman.nix
+        ./modules/cockpit.nix
+        ./modules/containers.nix
+        ./modules/remote-desktop.nix
+        ./modules/fan-control.nix
+      ];
     };
 
-    packages.${system} = {
+    packages.${hostSystem} = {
       sdImage = self.nixosConfigurations.${secrets.hostName}.config.system.build.sdImage;
-      default = self.packages.${system}.sdImage;
+      default = self.packages.${hostSystem}.sdImage;
     };
-
-    checks.${system}.default = self.nixosConfigurations.${secrets.hostName}.config.system.build.toplevel;
   };
 }
