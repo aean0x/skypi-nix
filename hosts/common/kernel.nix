@@ -76,8 +76,6 @@
     CONFIG_ROCKCHIP_MINI_DSI=y
   '';
 
-  isSDImage = config.sdImage.imageBaseName or "" == "nixos-rock5-itx";
-
   kernelPatches = [
     {
       name = "rk3588-platform-support";
@@ -86,19 +84,6 @@
         ARCH_ROCKCHIP = yes;
         ARCH_RK3588 = yes;
         ARM64_VA_BITS_48 = yes;
-      };
-    }
-  ] ++ lib.optionals (!isSDImage) [
-    {
-      name = "zfs-kernel-config";
-      patch = null;
-      extraStructuredConfig = with lib.kernel; {
-        ZFS = module;
-        ZLIB_DEFLATE = yes;
-        ZLIB_INFLATE = yes;
-        CRYPTO_SHA256 = yes;
-        CRYPTO_SHA512 = yes;
-        CRYPTO_AES = yes;
       };
     }
   ];
@@ -135,12 +120,10 @@ in {
       "uhci_hcd" "ehci_hcd" "ehci_pci" "ohci_hcd" "ohci_pci"
       "xhci_hcd" "xhci_pci" "hid_generic" "uas" "usb_storage"
       "sdhci_of_dwcmshc"
-    ] ++ lib.optionals (!isSDImage) [ "zfs" ];
+    ];
 
-    kernelModules = lib.optionals (!isSDImage) [ "zfs" ];
     extraModulePackages = [];
   };
 
-  boot.supportedFilesystems = [ "ext4" "vfat" ] 
-    ++ lib.optionals (!isSDImage) [ "zfs" ];
+  boot.supportedFilesystems = [ "ext4" "vfat" ];
 }
