@@ -64,7 +64,7 @@
     # I2C
     CONFIG_I2C_RK3X=y
 
-    # Basic DRM / Display (if you need video output)
+    # Basic DRM / Display
     CONFIG_DRM_ROCKCHIP=y
     CONFIG_ROCKCHIP_VOP2=y
     CONFIG_ROCKCHIP_DW_HDMI=y
@@ -85,7 +85,6 @@
         configfile = defconfig;
       };
       kernelPatches = [
-        # 1) Re-affirm basic platform flags (often no-op in mainline, but harmless)
         {
           name = "rk3588-platform-support";
           patch = null;
@@ -95,8 +94,6 @@
             ARM64_VA_BITS_48 = yes;
           };
         }
-
-        # 2) Enable ZFS as a module + required crypto
         {
           name = "zfs-kernel-config";
           patch = null;
@@ -113,7 +110,6 @@
     }
   );
 in {
-  # Hardware-specific settings
   powerManagement.cpuFreqGovernor = lib.mkDefault "performance";
   hardware.enableRedistributableFirmware = true;
   networking.useDHCP = lib.mkDefault true;
@@ -142,13 +138,4 @@ in {
 
   boot.supportedFilesystems = [ "ext4" "vfat" "zfs" ];
   boot.zfs.forceImportRoot = false;
-
-  environment.systemPackages = with pkgs; [
-    linuxHeaders
-    gnumake
-    gcc
-    pkg-config
-    ncurses
-    zfs
-  ];
 }

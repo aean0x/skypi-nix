@@ -1,36 +1,33 @@
-{ pkgs ? import <nixpkgs> { } }:
+{ pkgs ? import <nixpkgs> { }
+, isCross ? false
+}:
 
-let
-  crossPkgs = import pkgs.path {
-    system = "x86_64-linux";
-    crossSystem = {
-      config = "aarch64-unknown-linux-gnu";
-      system = "aarch64-linux";
-    };
-    config.allowBroken = true;
-  };
-in
 pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
-    pkg-config
-    ncurses
+    # Common tools needed for both native and cross builds
+    bison
+    byacc
+    flex
     gcc
     gnumake
+    pkg-config
+    ncurses
     bc
     openssl
-    flex
-    bison
     elfutils
     util-linux
     coreutils
-    crossPkgs.zfs
-  ];
-
-  buildInputs = with pkgs; [
-    nixos-rebuild
-  ];
+  ] ++ (if isCross then [
+    # Cross-compilation specific tools
+    pkgs.buildPackages.gcc
+    pkgs.buildPackages.binutils
+  ] else [
+    # Native-only tools
+    zfs
+  ]);
 
   shellHook = ''
-    export KERNEL_CROSS_BUILD=1
+    ${if isCross then "export KERNEL_CROSS_BUILD=1" else ""}
+    echo "Entering ${if isCross then "cross-compilation" else "native"} environment"
   '';
 }

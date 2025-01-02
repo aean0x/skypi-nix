@@ -15,13 +15,9 @@
     secrets = import ./secrets.nix;
     hostSystem = "x86_64-linux";
     targetSystem = "aarch64-linux";
-    
-    pkgsForSystem = system: import nixpkgs {
-      inherit system;
-      config.allowBroken = true;
-    };
 
-    pkgsForCross = import nixpkgs {
+    # For cross-compilation (SD image building)
+    crossPkgs = import nixpkgs {
       system = hostSystem;
       crossSystem = {
         config = "aarch64-unknown-linux-gnu";
@@ -29,16 +25,27 @@
       };
       config.allowBroken = true;
     };
+
+    # For native builds on the target
+    nativePkgs = import nixpkgs {
+      system = targetSystem;
+      config.allowBroken = true;
+    };
+
+    # Common modules configuration
+    commonModules = {
+      _module.args = {
+        inherit fan-control;
+      };
+    };
   in
   {
-    devShells.${hostSystem}.default = 
-      let pkgs = pkgsForSystem hostSystem;
-      in import ./shell.nix { inherit pkgs; };
-
+    # System configurations
     nixosConfigurations.${secrets.hostName} = nixpkgs.lib.nixosSystem {
       system = targetSystem;
-      pkgs = pkgsForCross;
+      pkgs = nativePkgs;
       modules = [
+        commonModules
         ./configuration.nix
         ./modules/kernel.nix
         ./modules/partitions.nix
@@ -51,8 +58,24 @@
       ];
     };
 
+    # Cross-compiled SD image
+    nixosConfigurations."${secrets.hostName}-sdimage" = nixpkgs.lib.nixosSystem {
+      system = targetSystem;
+      pkgs = crossPkgs;
+      modules = [
+        commonModules
+        ./configuration.nix
+        ./modules/cross-compile.nix
+        ./modules/kernel.nix
+        ./modules/partitions.nix
+        ./modules/zfs.nix
+        { sdImage.enable = true; }
+      ];
+    };
+
+    # Build products
     packages.${hostSystem} = {
-      sdImage = self.nixosConfigurations.${secrets.hostName}.config.system.build.sdImage;
+      sdImage = self.nixosConfigurations."${secrets.hostName}-sdimage".config.system.build.sdImage;
       default = self.packages.${hostSystem}.sdImage;
     };
   };
