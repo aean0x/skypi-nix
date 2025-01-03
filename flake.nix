@@ -16,21 +16,27 @@
     hostSystem = "x86_64-linux";
     targetSystem = "aarch64-linux";
 
-    # For cross-compilation (SD image building)
-    crossPkgs = import nixpkgs {
+    # Common nixpkgs configuration
+    nixpkgsConfig = {
+      config = {
+        allowUnfree = true;
+        allowBroken = true;
+      };
+    };
+
+    # For cross-compilation (ISO image building)
+    crossPkgs = import nixpkgs ({
       system = hostSystem;
       crossSystem = {
         config = "aarch64-unknown-linux-gnu";
         system = targetSystem;
       };
-      config.allowBroken = true;
-    };
+    } // nixpkgsConfig);
 
     # For native builds on the target
-    nativePkgs = import nixpkgs {
+    nativePkgs = import nixpkgs ({
       system = targetSystem;
-      config.allowBroken = true;
-    };
+    } // nixpkgsConfig);
   in
   {
     # Full system configuration (for running on target)
@@ -44,22 +50,22 @@
       ];
     };
 
-    # Minimal SD card image (bootstrap configuration)
-    nixosConfigurations."${secrets.hostName}-sdimage" = nixpkgs.lib.nixosSystem {
+    # Minimal ISO image (bootstrap configuration)
+    nixosConfigurations."${secrets.hostName}-isoimage" = nixpkgs.lib.nixosSystem {
       system = targetSystem;
       pkgs = crossPkgs;
       specialArgs = { inherit secrets; };
       modules = [
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./hosts/common
-        ./hosts/sdcard
+        ./hosts/iso-image
       ];
     };
 
     # Build products
     packages.${hostSystem} = {
-      sdImage = self.nixosConfigurations."${secrets.hostName}-sdimage".config.system.build.isoImage;
-      default = self.packages.${hostSystem}.sdImage;
+      isoImage = self.nixosConfigurations."${secrets.hostName}-isoimage".config.system.build.isoImage;
+      default = self.packages.${hostSystem}.isoImage;
     };
   };
 }

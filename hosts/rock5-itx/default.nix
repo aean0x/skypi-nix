@@ -4,7 +4,6 @@
 {
   imports = [
     # Hardware and system configuration
-    ./hardware.nix
     ./pools.nix
     
     # Services
@@ -17,8 +16,21 @@
   ];
 
   # System configuration
-  networking.hostName = secrets.hostName;
-  networking.useDHCP = true;
+  networking = {
+    hostName = secrets.hostName;
+    useDHCP = true;
+    hostId = "8425e349";  # Required for ZFS, generated with `head -c 8 /etc/machine-id`
+  };
+
+  # Boot configuration
+  boot.loader = {
+    grub = {
+      enable = true;
+      devices = [ "/dev/mmcblk0" ];  # Install GRUB to eMMC
+      efiSupport = true;
+    };
+    efi.canTouchEfiVariables = true;
+  };
 
   # User configuration
   users.users.${secrets.adminUser} = {
@@ -43,9 +55,6 @@
     wget
     curl
   ];
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
 
   system.stateVersion = "25.05";
 } 

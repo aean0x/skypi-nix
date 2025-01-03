@@ -5,6 +5,7 @@
   imports = [
     ./cross-compile.nix
     ./install-scripts.nix
+    ../common/kernel.nix
   ];
 
   # Boot configuration for UEFI
@@ -15,7 +16,6 @@
 
   # Basic networking
   networking = {
-    hostName = secrets.hostName;
     useDHCP = true;
     firewall.enable = true;
     firewall.allowedTCPPorts = [ 22 ];
@@ -28,26 +28,21 @@
     settings.PermitRootLogin = "no";
   };
 
-  # User setup
-  users.users.${secrets.adminUser} = {
-    isNormalUser = true;
-    openssh.authorizedKeys.keys = secrets.sshKeys;
-  };
-
-  # Override installation media packages to be minimal
+  # ISO image configuration
   isoImage = {
+    isoName = lib.mkForce "nixos-rock5-itx.iso";
     makeEfiBootable = true;
     makeUsbBootable = true;
-    contents = lib.mkForce [];
+    appendToMenuLabel = " Rock5 ITX Installer";
   };
 
+  # Minimal system packages
   environment.systemPackages = lib.mkForce (with pkgs; [
     iproute2
     openssh
   ]);
 
   # Disable installation media default packages
-  services.getty.autologinUser = lib.mkForce null;
   boot.supportedFilesystems = lib.mkForce [ "ext4" "vfat" ];
 
   # Disable unnecessary services
