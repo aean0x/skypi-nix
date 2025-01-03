@@ -77,7 +77,7 @@ in
       
       echo
       echo "Installation steps completed!"
-      echo "To build and switch to the new configuration, run:"
+      echo "To build and switch to the new configuration, edit secrets.nix and run:"
       echo "cd ~/setup/skypi-nix && sudo nixos-rebuild switch --flake .#"
     '')
 

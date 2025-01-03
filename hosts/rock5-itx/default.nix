@@ -35,6 +35,8 @@
   # User configuration
   users.users.${secrets.adminUser} = {
     isNormalUser = true;
+    hashedPassword = secrets.hashedPassword;
+    description = secrets.description;
     extraGroups = [ "wheel" "networkmanager" "video" ];
     openssh.authorizedKeys.keys = secrets.sshKeys;
   };
