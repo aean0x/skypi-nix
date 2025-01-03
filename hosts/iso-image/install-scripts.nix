@@ -6,6 +6,8 @@ let
   repoUrl = "https://github.com/aean0x/skypi-nix.git";
 in
 {
+  environment.etc."sops/age/keys.txt".source = ../../keys/age.key;
+
   environment.systemPackages = with pkgs; [
     # Individual setup scripts
     (pkgs.writeScriptBin "prepare-emmc" ''
@@ -18,7 +20,7 @@ in
       parted /dev/mmcblk0 -- mklabel gpt
       parted /dev/mmcblk0 -- mkpart ESP fat32 1MiB 512MiB
       parted /dev/mmcblk0 -- set 1 esp on
-      parted /dev/mmcblk0 -- mkpart primary 7100MiB 100%
+      parted /dev/mmcblk0 -- mkpart primary 512MiB 100%
       
       mkfs.vfat -F 32 -n ESP /dev/mmcblk0p1
       mkfs.ext4 -L nixos /dev/mmcblk0p2
@@ -51,6 +53,16 @@ in
       chown -R $USER:users ~/setup
     '')
 
+    (pkgs.writeScriptBin "setup-sops" ''
+      #!/bin/sh
+      set -e
+      echo "Setting up SOPS key..."
+      mkdir -p /var/lib/sops-nix
+      cp /etc/sops/age/keys.txt /var/lib/sops-nix/key.txt
+      chmod 600 /var/lib/sops-nix/key.txt
+      echo "SOPS key setup complete!"
+    '')
+
     # Main orchestrator script
     (pkgs.writeScriptBin "install-skypi" ''
       #!/bin/sh
@@ -69,6 +81,9 @@ in
       if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         flash-edk2
       fi
+
+      echo "Setting up SOPS key for secrets decryption..."
+      setup-sops
       
       read -p "Clone configuration repository? (y/N) " answer
       if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
@@ -77,7 +92,7 @@ in
       
       echo
       echo "Installation steps completed!"
-      echo "To build and switch to the new configuration, edit secrets.nix and run:"
+      echo "To build and switch to the new configuration, run:"
       echo "cd ~/setup/skypi-nix && sudo nixos-rebuild switch --flake .#"
     '')
 
@@ -86,5 +101,7 @@ in
     parted
     curl
     mtdutils
+    age
+    sops
   ];
 } 

@@ -4,15 +4,15 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
+    sops-nix.url = "github:Mic92/sops-nix";
     fan-control = {
       url = "github:pymumu/fan-control-rock5b";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, nixos-hardware, fan-control, ... }:
+  outputs = { self, nixpkgs, nixos-hardware, sops-nix, fan-control, ... }:
   let
-    secrets = import ./secrets.nix;
     hostSystem = "x86_64-linux";
     targetSystem = "aarch64-linux";
 
@@ -37,25 +37,39 @@
     nativePkgs = import nixpkgs ({
       system = targetSystem;
     } // nixpkgsConfig);
+
+    # Helper to get hostname from a module evaluation
+    getHostname = pkgs: let
+      module = nixpkgs.lib.evalModules {
+        modules = [
+          sops-nix.nixosModules.sops
+          ./sops.nix
+        ];
+      };
+    in module.config.hostname;
+
+    hostname = getHostname nativePkgs;
   in
   {
     # Full system configuration (for running on target)
-    nixosConfigurations.${secrets.hostName} = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
       system = targetSystem;
       pkgs = nativePkgs;
-      specialArgs = { inherit secrets; };
       modules = [
+        sops-nix.nixosModules.sops
+        ./sops.nix
         ./hosts/common
         ./hosts/rock5-itx
       ];
     };
 
     # Minimal ISO image (bootstrap configuration)
-    nixosConfigurations."${secrets.hostName}-isoimage" = nixpkgs.lib.nixosSystem {
+    nixosConfigurations."${hostname}-isoimage" = nixpkgs.lib.nixosSystem {
       system = targetSystem;
       pkgs = crossPkgs;
-      specialArgs = { inherit secrets; };
       modules = [
+        sops-nix.nixosModules.sops
+        ./sops.nix
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./hosts/common
         ./hosts/iso-image
@@ -64,7 +78,7 @@
 
     # Build products
     packages.${hostSystem} = {
-      isoImage = self.nixosConfigurations."${secrets.hostName}-isoimage".config.system.build.isoImage;
+      isoImage = self.nixosConfigurations."${hostname}-isoimage".config.system.build.isoImage;
       default = self.packages.${hostSystem}.isoImage;
     };
   };

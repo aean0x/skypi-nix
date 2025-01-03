@@ -2,7 +2,9 @@ secrets.nix
 result/
 *.qcow2
 *.img
-.*
+.env
 linux*
 result/*
 result
+keys/age.key
+secrets.sops.yaml
