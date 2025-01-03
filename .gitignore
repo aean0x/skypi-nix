@@ -4,5 +4,3 @@ result/
 *.img
 .*
 linux*
-result/*
-result
