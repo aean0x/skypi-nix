@@ -1,9 +1,9 @@
 # Installation scripts for initial setup
-{ pkgs, ... }:
+{ config, pkgs, settings, ... }:
 
 let
-  edk2FirmwareUrl = "https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.1/rock-5-itx_UEFI_Release_v0.12.1.img";
-  repoUrl = "https://github.com/aean0x/skypi-nix.git";
+  edk2FirmwareUrl = settings.edk2FirmwareUrl;
+  repoUrl = settings.repoUrl;
 in
 {
   environment.systemPackages = with pkgs; [
@@ -42,6 +42,16 @@ in
       echo "EDK2 firmware flashed successfully!"
     '')
 
+    (pkgs.writeScriptBin "setup-sops" ''
+      #!/bin/sh
+      set -e
+      echo "Setting up SOPS age key..."
+      mkdir -p /mnt/var/lib/sops-nix
+      cp /iso/secrets/key.txt /mnt/var/lib/sops-nix/
+      chmod 600 /mnt/var/lib/sops-nix/key.txt
+      echo "SOPS key installed successfully"
+    '')
+
     (pkgs.writeScriptBin "setup-repo" ''
       #!/bin/sh
       set -e
@@ -69,6 +79,11 @@ in
       if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         flash-edk2
       fi
+
+      read -p "Install SOPS decryption key? (y/N) " answer
+      if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+        setup-sops
+      fi
       
       read -p "Clone configuration repository? (y/N) " answer
       if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
@@ -77,7 +92,7 @@ in
       
       echo
       echo "Installation steps completed!"
-      echo "To build and switch to the new configuration, edit secrets.nix and run:"
+      echo "To build and switch to the new configuration, run:"
       echo "cd ~/setup/skypi-nix && sudo nixos-rebuild switch --flake .#"
     '')
 
@@ -86,5 +101,13 @@ in
     parted
     curl
     mtdutils
+    age
+    sops
   ];
+
+  # Include SOPS key in the ISO
+  isoImage.contents = [{
+    source = ./secrets/key.txt;
+    target = "/secrets/key.txt";
+  }];
 } 

@@ -2,9 +2,9 @@
   config,
   pkgs,
   lib,
+  settings,
   ...
 }: let
-  secrets = import ../secrets.nix;
   mkVolumeService = name: {
     description = "Create ${name} volume";
     wantedBy = ["multi-user.target"];
@@ -29,7 +29,7 @@ in {
     #   autoStart = true;
     #   environment = {
     #     NEXTCLOUD_ADMIN_USER = "admin";
-    #     NEXTCLOUD_ADMIN_PASSWORD = secrets.credentials.nextcloud.adminpass;
+    #     NEXTCLOUD_ADMIN_PASSWORD = settings.nextcloud.adminpass;
     #   };
     #   volumes = [
     #     "nextcloud-data:/var/www/html"

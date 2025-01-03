@@ -1,5 +1,5 @@
 # Minimal SD card image configuration
-{ config, lib, pkgs, secrets, ... }:
+{ config, lib, pkgs, settings, ... }:
 
 {
   imports = [
@@ -30,10 +30,10 @@
 
   # ISO image configuration
   isoImage = {
-    isoName = lib.mkForce "nixos-rock5-itx.iso";
+    isoName = lib.mkForce "${settings.hostName}-${settings.kernelVersion}-nixos.iso";
     makeEfiBootable = true;
     makeUsbBootable = true;
-    appendToMenuLabel = " Rock5 ITX Installer";
+    appendToMenuLabel = "${settings.hostName} Nix Installer";
   };
 
   # Minimal system packages

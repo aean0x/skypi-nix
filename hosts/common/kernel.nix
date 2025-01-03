@@ -1,6 +1,7 @@
-{ lib, pkgs, config, ... }: let
-  kernelVersion = "6.13-rc5";
-  modDirVersion = "6.13.0-rc5";
+# Kernel configuration for ROCK5 ITX
+{ lib, pkgs, config, settings, ... }: let
+  kernelVersion = settings.kernelVersion;
+  modDirVersion = settings.modDirVersion;
 
   kernelSrc = pkgs.fetchurl {
     url    = "https://git.kernel.org/torvalds/t/linux-${kernelVersion}.tar.gz";

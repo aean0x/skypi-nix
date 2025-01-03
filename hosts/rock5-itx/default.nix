@@ -1,5 +1,5 @@
 # Main system configuration for ROCK5 ITX
-{ config, pkgs, lib, secrets, ... }:
+{ config, pkgs, lib, settings, ... }:
 
 {
   imports = [
@@ -17,9 +17,9 @@
 
   # System configuration
   networking = {
-    hostName = secrets.hostName;
+    hostName = settings.hostName;
     useDHCP = true;
-    hostId = "8425e349";  # Required for ZFS, generated with `head -c 8 /etc/machine-id`
+    hostId = settings.hostId;
   };
 
   # Boot configuration
@@ -33,12 +33,12 @@
   };
 
   # User configuration
-  users.users.${secrets.adminUser} = {
+  users.users.${settings.adminUser} = {
     isNormalUser = true;
-    hashedPassword = secrets.hashedPassword;
-    description = secrets.description;
+    hashedPassword = settings.hashedPassword;
+    description = settings.description;
     extraGroups = [ "wheel" "networkmanager" "video" ];
-    openssh.authorizedKeys.keys = secrets.sshKeys;
+    openssh.authorizedKeys.keys = settings.sshKeys;
   };
 
   # Enable SSH access

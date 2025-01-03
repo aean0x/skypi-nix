@@ -4,17 +4,16 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
+    sops-nix.url = "github:Mic92/sops-nix";
     fan-control = {
       url = "github:pymumu/fan-control-rock5b";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, nixos-hardware, fan-control, ... }:
+  outputs = { self, nixpkgs, nixos-hardware, sops-nix, fan-control, ... }:
   let
-    secrets = import ./secrets.nix;
-    hostSystem = "x86_64-linux";
-    targetSystem = "aarch64-linux";
+    settings = import ./settings.nix;
 
     # Common nixpkgs configuration
     nixpkgsConfig = {
@@ -26,46 +25,50 @@
 
     # For cross-compilation (ISO image building)
     crossPkgs = import nixpkgs ({
-      system = hostSystem;
+      system = settings.hostSystem;
       crossSystem = {
         config = "aarch64-unknown-linux-gnu";
-        system = targetSystem;
+        system = settings.targetSystem;
       };
     } // nixpkgsConfig);
 
     # For native builds on the target
     nativePkgs = import nixpkgs ({
-      system = targetSystem;
+      system = settings.targetSystem;
     } // nixpkgsConfig);
   in
   {
     # Full system configuration (for running on target)
-    nixosConfigurations.${secrets.hostName} = nixpkgs.lib.nixosSystem {
-      system = targetSystem;
+    nixosConfigurations.${settings.hostName} = nixpkgs.lib.nixosSystem {
+      system = settings.targetSystem;
       pkgs = nativePkgs;
-      specialArgs = { inherit secrets; };
+      specialArgs = { inherit settings; };
       modules = [
+        sops-nix.nixosModules.sops
+        ./sops.nix
         ./hosts/common
         ./hosts/rock5-itx
       ];
     };
 
     # Minimal ISO image (bootstrap configuration)
-    nixosConfigurations."${secrets.hostName}-isoimage" = nixpkgs.lib.nixosSystem {
-      system = targetSystem;
+    nixosConfigurations."${settings.hostName}-isoimage" = nixpkgs.lib.nixosSystem {
+      system = settings.targetSystem;
       pkgs = crossPkgs;
-      specialArgs = { inherit secrets; };
+      specialArgs = { inherit settings; };
       modules = [
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+        sops-nix.nixosModules.sops
+        ./sops.nix
         ./hosts/common
         ./hosts/iso-image
       ];
     };
 
     # Build products
-    packages.${hostSystem} = {
-      isoImage = self.nixosConfigurations."${secrets.hostName}-isoimage".config.system.build.isoImage;
-      default = self.packages.${hostSystem}.isoImage;
+    packages.${settings.hostSystem} = {
+      isoImage = self.nixosConfigurations."${settings.hostName}-isoimage".config.system.build.isoImage;
+      default = self.packages.${settings.hostSystem}.isoImage;
     };
   };
 }

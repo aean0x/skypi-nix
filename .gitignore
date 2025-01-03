@@ -1,8 +1,19 @@
-secrets.nix
-result/
-*.qcow2
-*.img
-.*
-linux*
-result/*
+# Build outputs
 result
+result-*
+flake.lock
+
+# Secrets
+secrets/key.txt
+secrets/secrets.yaml
+!secrets/secrets.yaml.example
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# System files
+.DS_Store
+Thumbs.db
