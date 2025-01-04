@@ -23,7 +23,7 @@
       };
     };
 
-    # For cross-compilation (ISO image building)
+    # For cross-compilation (SD card image building)
     crossPkgs = import nixpkgs ({
       system = settings.hostSystem;
       crossSystem = {
@@ -50,23 +50,24 @@
       ];
     };
 
-    # Minimal ISO image (bootstrap configuration)
-    nixosConfigurations."${settings.hostName}-isoimage" = nixpkgs.lib.nixosSystem {
+    # Minimal SD card image (bootstrap configuration)
+    nixosConfigurations."${settings.hostName}-sdimage" = nixpkgs.lib.nixosSystem {
       system = settings.targetSystem;
       pkgs = crossPkgs;
       specialArgs = { inherit settings; };
       modules = [
-        "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+        "${nixpkgs}/nixos/modules/installer/sd-card/sd-image.nix"
+        "${nixpkgs}/nixos/modules/profiles/minimal.nix"
         sops-nix.nixosModules.sops
         ./hosts/common
-        ./hosts/iso-image
+        ./hosts/sd-image
       ];
     };
 
     # Build products
     packages.${settings.hostSystem} = {
-      isoImage = self.nixosConfigurations."${settings.hostName}-isoimage".config.system.build.isoImage;
-      default = self.packages.${settings.hostSystem}.isoImage;
+      sdImage = self.nixosConfigurations."${settings.hostName}-sdimage".config.system.build.sdImage;
+      default = self.packages.${settings.hostSystem}.sdImage;
     };
   };
 }
