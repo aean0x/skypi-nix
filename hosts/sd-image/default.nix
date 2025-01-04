@@ -5,8 +5,14 @@
   imports = [
     ./cross-compile.nix
     ./install-scripts.nix
+    ./partitions.nix
     ../common/kernel.nix
   ];
+
+  # Boot configuration for U-Boot
+  boot.loader.grub.enable = false;
+  boot.loader.generic-extlinux-compatible.enable = true;
+  boot.loader.generic-extlinux-compatible.configurationLimit = 1;
 
   # Console configuration
   boot.consoleLogLevel = lib.mkDefault 7;
@@ -21,23 +27,10 @@
   sdImage = {
     imageBaseName = "${settings.hostName}-${settings.kernelVersion}";
     compressImage = false;
-    firmwareSize = 64;  # Increased for RK3588 bootloader
-    firmwarePartitionName = "firmware";
-    firmwarePartitionOffset = 32;  # Start at 32MB to leave room for all bootloader components
-    populateFirmwareCommands = '''';  # We'll write bootloader in postBuildCommands
+    populateFirmwareCommands = '''';
     populateRootCommands = ''
       mkdir -p ./files/boot
-    '';
-    # Write bootloader components at their respective offsets
-    postBuildCommands = ''
-      # Write idbloader.img (IPL + SPL) at 32KB
-      dd if=${../firmware/output/idbloader.img} of=$img bs=512 seek=64 conv=notrunc
-
-      # Write u-boot.itb (U-Boot + DTB) at 8MB
-      dd if=${../firmware/output/u-boot.itb} of=$img bs=512 seek=16384 conv=notrunc
-
-      # Write trust.img (ATF + OP-TEE) at 24MB
-      dd if=${../firmware/output/trust.img} of=$img bs=512 seek=49152 conv=notrunc
+      ${config.boot.loader.generic-extlinux-compatible.populateCmd} -c ${config.system.build.toplevel} -d ./files/boot
     '';
   };
 
@@ -71,6 +64,7 @@
     openssh
     mtdutils
     coreutils
+    utillinux  # for sfdisk
   ]);
 
   # Disable unnecessary services

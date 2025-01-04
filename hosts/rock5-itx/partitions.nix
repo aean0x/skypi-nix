@@ -1,4 +1,8 @@
-{ config, pkgs, ... }: {
+# Storage configuration for ROCK5 ITX
+{ config, lib, pkgs, ... }:
+
+{
+  # ZFS configuration
   boot = {
     supportedFilesystems = [ "zfs" ];
     kernelModules = [ "zfs" ];
@@ -22,4 +26,18 @@
     zfs
     zfs-prune-snapshots
   ];
+
+  # eMMC partition configuration
+  fileSystems = {
+    "/" = {
+      device = "/dev/mmcblk0p2";
+      fsType = "ext4";
+    };
+
+    "/boot" = {
+      device = "/dev/mmcblk0p1";
+      fsType = "vfat";
+      options = ["fmask=0022" "dmask=0022"];
+    };
+  };
 } 

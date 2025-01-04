@@ -4,7 +4,7 @@
 {
   imports = [
     # Hardware and system configuration
-    ./pools.nix
+    ./partitions.nix
     
     # Services
     ./services/cockpit.nix

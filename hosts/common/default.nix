@@ -2,6 +2,5 @@
 {
   imports = [
     ./kernel.nix
-    ./partitions.nix
   ];
 } 
