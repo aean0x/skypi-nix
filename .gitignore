@@ -2,6 +2,7 @@
 result
 result-*
 flake.lock
+bsp
 
 # Secrets management
 /secrets/key.txt
@@ -25,3 +26,7 @@ Thumbs.db
 
 # Nix
 .direnv
+
+# Firmware build directories and artifacts
+firmware/rkbin/
+firmware/u-boot/

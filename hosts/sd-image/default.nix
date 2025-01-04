@@ -8,10 +8,6 @@
     ../common/kernel.nix
   ];
 
-  # Use extlinux boot configuration
-  boot.loader.grub.enable = false;
-  boot.loader.generic-extlinux-compatible.enable = true;
-
   # Console configuration
   boot.consoleLogLevel = lib.mkDefault 7;
   boot.kernelParams = [
@@ -23,19 +19,25 @@
 
   # SD card image configuration
   sdImage = {
-    imageBaseName = "${settings.hostName}-${settings.kernelVersion}-sdcard.img";
+    imageBaseName = "${settings.hostName}-${settings.kernelVersion}";
     compressImage = false;
     firmwareSize = 64;  # Increased for RK3588 bootloader
     firmwarePartitionName = "firmware";
-    populateFirmwareCommands = ''
-      # Copy vendor bootloader image
-      cp ${./bootloader.img} firmware/bootloader.img
-      # Write it to the start of the firmware partition
-      dd if=firmware/bootloader.img of=$img bs=512 conv=notrunc
-    '';
+    firmwarePartitionOffset = 32;  # Start at 32MB to leave room for all bootloader components
+    populateFirmwareCommands = '''';  # We'll write bootloader in postBuildCommands
     populateRootCommands = ''
       mkdir -p ./files/boot
-      ${config.boot.loader.generic-extlinux-compatible.populateCmd} -c ${config.system.build.toplevel} -d ./files/boot
+    '';
+    # Write bootloader components at their respective offsets
+    postBuildCommands = ''
+      # Write idbloader.img (IPL + SPL) at 32KB
+      dd if=${../firmware/output/idbloader.img} of=$img bs=512 seek=64 conv=notrunc
+
+      # Write u-boot.itb (U-Boot + DTB) at 8MB
+      dd if=${../firmware/output/u-boot.itb} of=$img bs=512 seek=16384 conv=notrunc
+
+      # Write trust.img (ATF + OP-TEE) at 24MB
+      dd if=${../firmware/output/trust.img} of=$img bs=512 seek=49152 conv=notrunc
     '';
   };
 
@@ -56,18 +58,19 @@
   # SSH access
   services.openssh = {
     enable = true;
-    settings.PasswordAuthentication = true;
-    settings.PermitRootLogin = "no";
-    settings.UsePAM = true;
-    settings.PermitEmptyPasswords = true;
+    settings = {
+      PasswordAuthentication = true;
+      ChallengeResponseAuthentication = false;
+      UsePAM = true;
+    };
   };
 
   # Minimal system packages
   environment.systemPackages = lib.mkForce (with pkgs; [
     iproute2
     openssh
-    mtdutils  # For flash operations
-    coreutils # For cmp and other utilities
+    mtdutils
+    coreutils
   ]);
 
   # Disable unnecessary services
