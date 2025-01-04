@@ -29,7 +29,7 @@ if [ ! -f secrets.yaml ]; then
     exit 1
 fi
 
-# Decrypt secrets to working file
-SOPS_AGE_KEY_FILE="$KEY_PATH" SOPS_CONFIG=.sops.yaml sops -d secrets.yaml > secrets.yaml.work
+# Decrypt secrets to working file and remove any nested data structures
+SOPS_AGE_KEY_FILE="$KEY_PATH" SOPS_CONFIG=.sops.yaml sops --input-type=yaml --output-type=yaml -d secrets.yaml > secrets.yaml.work
 echo "Decrypted secrets.yaml to secrets.yaml.work"
 echo "IMPORTANT: Edit secrets.yaml.work, then run ./encrypt.sh to save changes" 

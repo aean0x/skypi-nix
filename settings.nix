@@ -2,6 +2,7 @@
   # System
   hostName = "SkyPi";
   adminUser = "aean";
+  setupPassword = "nixos"; # For SSH into the setup image
   description = "ROCK5 NAS Server";
   hostId = "8425e349";  # Required for ZFS, generated with `head -c 8 /etc/machine-id`
 
@@ -20,7 +21,7 @@
   # Replace with your SSH public key(s)
   # Generate with: ssh-keygen -y -f ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.pub && cat ~/.ssh/id_ed25519.pub
   sshKeys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICDLqmVVRDu7JAGeedYl6mXVfuY7UYaEKFEh02JeXBWB rock5-server-access"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIbxwWbFkWQb+BozyJkDXbfIdnKXoCAwJkTQMncdyG5r aean@nix-pc"
   ];
 
   # SOPS configuration

@@ -67,14 +67,15 @@ if [ ! -f secrets.yaml.work ]; then
         fi
     else
         # If we have an encrypted file, decrypt it to work file
-        SOPS_AGE_KEY_FILE="$KEY_PATH" SOPS_CONFIG="$(pwd)/.sops.yaml" sops -d secrets.yaml > secrets.yaml.work
+        SOPS_AGE_KEY_FILE="$KEY_PATH" SOPS_CONFIG="$(pwd)/.sops.yaml" sops --input-type=yaml --output-type=yaml -d secrets.yaml > secrets.yaml.work
         echo "Created working file from existing encrypted secrets"
     fi
 fi
 
-# Encrypt the working file to the final location
+# Clean up any nested data structures before encryption
 if [ -f secrets.yaml.work ]; then
-    SOPS_AGE_KEY_FILE="$KEY_PATH" SOPS_CONFIG="$(pwd)/.sops.yaml" sops -e secrets.yaml.work > secrets.yaml
+    # Encrypt the working file
+    SOPS_AGE_KEY_FILE="$KEY_PATH" SOPS_CONFIG="$(pwd)/.sops.yaml" sops --input-type=yaml --output-type=yaml -e secrets.yaml.work > secrets.yaml
     echo "Encrypted secrets.yaml.work to secrets.yaml"
     rm secrets.yaml.work
     echo "Removed working file"

@@ -21,18 +21,20 @@
     firewall.allowedTCPPorts = [ 22 ];
   };
 
-  # User configuration for installation media
+  # Default user configuration
   users.users.${settings.adminUser} = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = settings.sshKeys;
+    password = settings.setupPassword;
+    extraGroups = [ "wheel" "networkmanager" ];
   };
 
   # SSH access
   services.openssh = {
     enable = true;
-    settings.PasswordAuthentication = false;
+    settings.PasswordAuthentication = true;
     settings.PermitRootLogin = "no";
+    settings.UsePAM = true;
+    settings.PermitEmptyPasswords = true;
   };
 
   # ISO image configuration
