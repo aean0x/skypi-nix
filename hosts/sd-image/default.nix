@@ -27,7 +27,16 @@
   sdImage = {
     imageBaseName = "${settings.hostName}-${settings.kernelVersion}";
     compressImage = false;
-    populateFirmwareCommands = '''';
+    populateFirmwareCommands = ''
+      # Write idbloader.img at sector 64 (32KB)
+      dd if=${config.sdImage.partitions.idbloader.source} of=$img seek=${toString config.sdImage.partitions.idbloader.start} conv=notrunc
+
+      # Write u-boot.itb at sector 16384 (8MB)
+      dd if=${config.sdImage.partitions.uboot.source} of=$img seek=${toString config.sdImage.partitions.uboot.start} conv=notrunc
+
+      # Write trust.img at sector 49152 (24MB)
+      dd if=${config.sdImage.partitions.trust.source} of=$img seek=${toString config.sdImage.partitions.trust.start} conv=notrunc
+    '';
     populateRootCommands = ''
       mkdir -p ./files/boot
       ${config.boot.loader.generic-extlinux-compatible.populateCmd} -c ${config.system.build.toplevel} -d ./files/boot
