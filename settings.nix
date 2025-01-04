@@ -17,13 +17,18 @@
   edk2FirmwareUrl = "https://github.com/edk2-porting/edk2-rk3588/releases/download/v0.12.1/rock-5-itx_UEFI_Release_v0.12.1.img";
   repoUrl = "https://github.com/aean0x/skypi-nix.git";
 
+  # Replace with your SSH public key(s)
+  # Generate with: ssh-keygen -y -f ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.pub && cat ~/.ssh/id_ed25519.pub
+  sshKeys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICDLqmVVRDu7JAGeedYl6mXVfuY7UYaEKFEh02JeXBWB rock5-server-access"
+  ];
+
   # SOPS configuration
   sops = {
     defaultSopsFile = ./secrets/secrets.yaml;
     age.keyFile = "/var/lib/sops-nix/key.txt";
     secrets = {
-      "user.hashedPassword" = {};
-      "user.sshKeys" = {};
+      "user.password" = {};
       "services.nextcloud.adminpass" = {};
     };
   };

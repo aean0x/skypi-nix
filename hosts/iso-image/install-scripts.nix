@@ -1,7 +1,8 @@
 # Installation scripts for initial setup
-{ config, pkgs, settings, ... }:
+{ config, pkgs, lib, settings, ... }:
 
 let
+  fs = lib.fileset;
   edk2FirmwareUrl = settings.edk2FirmwareUrl;
   repoUrl = settings.repoUrl;
 in
@@ -42,16 +43,6 @@ in
       echo "EDK2 firmware flashed successfully!"
     '')
 
-    (pkgs.writeScriptBin "setup-sops" ''
-      #!/bin/sh
-      set -e
-      echo "Setting up SOPS age key..."
-      mkdir -p /mnt/var/lib/sops-nix
-      cp /iso/secrets/key.txt /mnt/var/lib/sops-nix/
-      chmod 600 /mnt/var/lib/sops-nix/key.txt
-      echo "SOPS key installed successfully"
-    '')
-
     (pkgs.writeScriptBin "setup-repo" ''
       #!/bin/sh
       set -e
@@ -79,11 +70,6 @@ in
       if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         flash-edk2
       fi
-
-      read -p "Install SOPS decryption key? (y/N) " answer
-      if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-        setup-sops
-      fi
       
       read -p "Clone configuration repository? (y/N) " answer
       if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
@@ -92,6 +78,9 @@ in
       
       echo
       echo "Installation steps completed!"
+      echo "IMPORTANT: Before building the system, ensure your SOPS key is in /var/lib/sops-nix/key.txt"
+      echo "If you haven't done so, configure secrets in the repo."
+      echo
       echo "To build and switch to the new configuration, run:"
       echo "cd ~/setup/skypi-nix && sudo nixos-rebuild switch --flake .#"
     '')
@@ -104,10 +93,4 @@ in
     age
     sops
   ];
-
-  # Include SOPS key in the ISO
-  isoImage.contents = [{
-    source = ./secrets/key.txt;
-    target = "/secrets/key.txt";
-  }];
 } 

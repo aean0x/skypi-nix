@@ -45,7 +45,6 @@
       specialArgs = { inherit settings; };
       modules = [
         sops-nix.nixosModules.sops
-        ./sops.nix
         ./hosts/common
         ./hosts/rock5-itx
       ];
@@ -59,7 +58,6 @@
       modules = [
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         sops-nix.nixosModules.sops
-        ./sops.nix
         ./hosts/common
         ./hosts/iso-image
       ];

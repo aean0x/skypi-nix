@@ -35,7 +35,7 @@
   # User configuration
   users.users.${settings.adminUser} = {
     isNormalUser = true;
-    hashedPassword = settings.hashedPassword;
+    password = config.sops.secrets."user.password".path;
     description = settings.description;
     extraGroups = [ "wheel" "networkmanager" "video" ];
     openssh.authorizedKeys.keys = settings.sshKeys;

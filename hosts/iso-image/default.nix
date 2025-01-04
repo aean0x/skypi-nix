@@ -21,6 +21,13 @@
     firewall.allowedTCPPorts = [ 22 ];
   };
 
+  # User configuration for installation media
+  users.users.${settings.adminUser} = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ];
+    openssh.authorizedKeys.keys = settings.sshKeys;
+  };
+
   # SSH access
   services.openssh = {
     enable = true;

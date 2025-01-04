@@ -3,10 +3,15 @@ result
 result-*
 flake.lock
 
-# Secrets
-secrets/key.txt
-secrets/secrets.yaml
-!secrets/secrets.yaml.example
+# Secrets management
+/secrets/key.txt
+/secrets/secrets.yaml.work
+/secrets/secrets.yaml.dec
+/secrets/secrets.yaml.unencrypted
+/secrets/secrets.yaml.plain
+# Keep encrypted secrets.yaml and configuration in repo
+!/secrets/secrets.yaml
+!/secrets/.sops.yaml
 
 # Editor files
 .vscode/
@@ -17,3 +22,6 @@ secrets/secrets.yaml
 # System files
 .DS_Store
 Thumbs.db
+
+# Nix
+.direnv
