@@ -30,3 +30,13 @@ Thumbs.db
 # Firmware build directories and artifacts
 firmware/rkbin/
 firmware/u-boot/
+
+# Firmware build directories
+firmware/bsp/
+firmware/downloads/
+firmware/output/
+
+# Firmware output files
+firmware/*.img
+firmware/*.itb
+firmware/*.bin

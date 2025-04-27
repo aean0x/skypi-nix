@@ -1,101 +1,119 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# Exit on error and enable debug output
-set -e
-set -x
-
-# Configure git to trust all directories in the workspace
-git config --global --unset-all safe.directory || true
-git config --global --add safe.directory '*'
-
-# Get the script's directory
-FIRMWARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${FIRMWARE_DIR}"
-
-# Clone Rockchip BSP repository if not already present
-if [ ! -d "rkbin" ]; then
-    git clone --depth=1 https://github.com/radxa/rkbin.git
-fi
-
-# Clone Rockchip U-Boot repository if not already present
-if [ ! -d "u-boot" ]; then
-    git clone https://github.com/radxa/u-boot.git
-fi
-
-# First build the firmware images
-cd rkbin
-
-# Build bootloader images
-./tools/boot_merger RKBOOT/RK3588MINIALL.ini
-
-# Verify the SPL loader was created
-if [ ! -f "rk3588_spl_loader_v1.16.113.bin" ]; then
-    echo "Error: SPL loader not found. Using latest available version..."
-    LATEST_SPL=$(ls -1 rk3588_spl_loader_v*.bin | sort -V | tail -n1)
-    if [ -z "$LATEST_SPL" ]; then
-        echo "Error: No SPL loader found!"
-        exit 1
-    fi
-    echo "Found SPL loader: $LATEST_SPL"
-    cp "$LATEST_SPL" rk3588_spl_loader_v1.16.113.bin
-fi
-
-# Copy required files with latest versions
-cp rk3588_spl_loader_v1.16.113.bin idbloader.img
-cp bin/rk35/rk3588_bl31_v1.46.elf bl31.elf
-cp bin/rk35/rk3588_bl32_v1.15.bin tee.bin
-cp bin/rk35/rk3588_ddr_lp4_2112MHz_lp5_2400MHz_v1.16.bin ddr.bin
-
-# Create trust image
-if [ ! -f "RKTRUST/RK3588TRUST.ini" ]; then
-    echo "Error: Trust configuration not found!"
-    exit 1
-fi
-
-# Create trust image with correct paths
-RKBIN_DIR=$(pwd)
-sed -e "s|PATH=bin/rk35/rk3588_bl31_v1.46.elf|PATH=${RKBIN_DIR}/bl31.elf|" \
-    -e "s|PATH=bin/rk35/rk3588_bl32_v1.15.bin|PATH=${RKBIN_DIR}/tee.bin|" \
-    RKTRUST/RK3588TRUST.ini > RKTRUST/RKTRUST.ini
-cd RKTRUST
-../tools/trust_merger RKTRUST.ini
-cd ..
-./tools/loaderimage --pack --trustos tee.bin ./trust.img
-
-# Verify the firmware files
-if [ ! -f "idbloader.img" ] || [ ! -f "trust.img" ]; then
-    echo "Error: Failed to generate firmware images!"
-    exit 1
-fi
-
-# Now build U-Boot
-cd ../u-boot
-
-# Make sure we're on the right branch
-git remote set-url origin https://github.com/radxa/u-boot.git
-git fetch origin
-git checkout next-dev-v2024.10 || git checkout -b next-dev-v2024.10 origin/next-dev-v2024.10
-
-# Configure for ROCK 5B (closest to ITX)
-make mrproper
-make CROSS_COMPILE=aarch64-unknown-linux-gnu- HOSTCC=gcc CC=aarch64-unknown-linux-gnu-gcc NO_PYTHON=1 rock-5b-rk3588_defconfig
-
-# Build U-Boot with warnings not treated as errors
-make CROSS_COMPILE=aarch64-unknown-linux-gnu- HOSTCC=gcc CC=aarch64-unknown-linux-gnu-gcc NO_PYTHON=1 -j$(nproc)
-
-# Copy U-Boot image to rkbin directory
-cp u-boot-dtb.bin ../rkbin/u-boot.itb
-
-cd ..
-
-# Copy final images to firmware directory
+# Create output directory if it doesn't exist
 mkdir -p output
-cp rkbin/idbloader.img ./output/
-cp rkbin/trust.img ./output/
-cp rkbin/u-boot.itb ./output/
 
-echo "Bootloader images built successfully:"
-echo "- idbloader.img (for SD card offset 32KB)"
-echo "- trust.img (for SD card offset 24MB)"
-echo "- u-boot.itb (for SD card offset 8MB)"
-echo "Files are located in: ${FIRMWARE_DIR}" 
+# Ensure we're in the script's directory
+cd "$(dirname "$0")"
+
+# Create a downloads directory
+mkdir -p downloads
+
+# Download the latest miniloader if not present
+if [ ! -f "downloads/rk3588_spl_loader_v1.15.113.bin" ]; then
+    wget -P downloads https://dl.radxa.com/rock5/sw/images/loader/rk3588_spl_loader_v1.15.113.bin
+fi
+
+# Clone repositories if they don't exist
+if [ ! -d "bsp" ]; then
+    git clone https://github.com/radxa-repo/bsp.git
+fi
+
+cd bsp
+
+# Add the directory as safe for git
+git config --global --add safe.directory "$PWD"
+
+# Initialize and update submodules
+git submodule init
+git submodule update
+
+# Create custom defconfig patch
+mkdir -p u-boot/rknext/0001-common
+cat > u-boot/rknext/0001-common/0001-rock-5-itx-serial.patch << 'EOF'
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: SkyPi Builder <builder@skypi.local>
+Date: Sat, 6 Jan 2024 12:00:00 +0000
+Subject: [PATCH] rock-5-itx: configure serial and defaults
+
+Set serial console baud rate to 115200 and configure basic settings.
+
+Signed-off-by: SkyPi Builder <builder@skypi.local>
+---
+diff --git a/configs/rock-5-itx-rk3588_defconfig b/configs/rock-5-itx-rk3588_defconfig
+index xxxxxxx..yyyyyyy 100644
+--- a/configs/rock-5-itx-rk3588_defconfig
++++ b/configs/rock-5-itx-rk3588_defconfig
+@@ -200,0 +201,15 @@
++CONFIG_BOOTDELAY=2
++CONFIG_BOOTCOMMAND="run distro_bootcmd"
++CONFIG_SYS_CONSOLE_INFO_QUIET=n
++
++# Serial configuration
++CONFIG_BAUDRATE=115200
++CONFIG_SYS_NS16550_CLK=24000000
++CONFIG_SYS_NS16550_MEM32=y
++CONFIG_SYS_NS16550_PORT_MAPPED=n
++CONFIG_DEBUG_UART_BASE=0xfeb50000
++CONFIG_DEBUG_UART_CLOCK=24000000
++
++# Basic debug output
++CONFIG_DEBUG=y
++CONFIG_DISPLAY_BOARDINFO=y
+--
+2.34.1
+EOF
+
+# Copy miniloader to the expected location
+mkdir -p rkbin/bin/rk35
+cp ../downloads/rk3588_spl_loader_v1.15.113.bin rkbin/bin/rk35/rk3588_spl_loader_v1.15.113.bin
+
+# Build U-Boot using Docker with explicit paths
+docker run --rm --privileged \
+    -v "$PWD:/workspace" \
+    -w /workspace \
+    -e RKMINILOADER="/workspace/rkbin/bin/rk35/rk3588_spl_loader_v1.15.113.bin" \
+    ghcr.io/radxa-repo/bsp:main \
+    ./bsp --native-build u-boot rknext rock-5-itx
+
+# Move only the generic .deb file to output
+mv u-boot-rknext_*_arm64.deb ../output/uboot-generic.deb
+
+cd ../output
+
+# Extract the generic .deb file
+echo "Extracting uboot-generic.deb..."
+mkdir -p temp
+cd temp
+ar x "../uboot-generic.deb"
+
+# Extract the data archive
+if [ -f "data.tar.xz" ]; then
+    tar xf data.tar.xz
+elif [ -f "data.tar.gz" ]; then
+    tar xf data.tar.gz
+elif [ -f "data.tar.zst" ]; then
+    zstd -d data.tar.zst -o data.tar
+    tar xf data.tar
+    rm data.tar
+fi
+
+# Move and rename the important files
+UBOOT_DIR="usr/lib/u-boot/rock-5-itx"
+if [ -d "$UBOOT_DIR" ]; then
+    # Move and rename files based on their purpose
+    mv "$UBOOT_DIR/idbloader.img" ../idbloader.img
+    mv "$UBOOT_DIR/u-boot.itb" ../u-boot.itb
+    mv "$UBOOT_DIR/rkboot.bin" ../rkboot.bin
+fi
+
+# Clean up
+cd ..
+rm -rf temp
+
+echo "Build complete! The following files are available in the output directory:"
+echo "  - idbloader.img (Combined TPL and SPL loader, flashed at 32KB)"
+echo "  - u-boot.itb (U-Boot proper with FIT image, flashed at 8MB)"
+echo "  - rkboot.bin (Rockchip maskrom mode loader, used only for recovery/flashing)"
+echo "  - uboot-generic.deb (Original package file)" 

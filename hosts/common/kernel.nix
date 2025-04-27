@@ -2,10 +2,11 @@
 { lib, pkgs, config, settings, ... }: let
   kernelVersion = settings.kernelVersion;
   modDirVersion = settings.modDirVersion;
+  kernelHash = settings.kernelHash;
 
   kernelSrc = pkgs.fetchurl {
     url    = "https://git.kernel.org/torvalds/t/linux-${kernelVersion}.tar.gz";
-    sha256 = "0yhqw3ddpmxjv82f50385dcg86cripm0rsl68xfv5qxrs4m6i7i3";
+    sha256 = kernelHash;
   };
 
   defconfig = pkgs.writeText "defconfig" ''
@@ -14,6 +15,20 @@
     CONFIG_ARCH_ROCKCHIP=y
     CONFIG_ARCH_RK3588=y
     CONFIG_ARM64_VA_BITS_48=y
+
+    # Serial port / UART configuration
+    CONFIG_SERIAL_8250=y
+    CONFIG_SERIAL_8250_CONSOLE=y
+    CONFIG_SERIAL_8250_DW=y
+    CONFIG_SERIAL_8250_NR_UARTS=8
+    CONFIG_SERIAL_8250_RUNTIME_UARTS=8
+    CONFIG_SERIAL_8250_EXTENDED=y
+    CONFIG_SERIAL_8250_SHARE_IRQ=y
+    CONFIG_SERIAL_8250_DMA=y
+    CONFIG_SERIAL_OF_PLATFORM=y
+    CONFIG_SERIAL_EARLYCON=y
+    CONFIG_SERIAL_EARLYCON_RISCV_SBI=y
+    CONFIG_SERIAL_DEV_BUS=y
 
     # Core crypto optimizations on ARM64
     CONFIG_CRYPTO_SHA256_ARM64=y
@@ -106,13 +121,18 @@ in {
   networking.useDHCP = lib.mkDefault true;
 
   boot = {
-    kernelPackages = kernelPackagesCustom;
+    kernelPackages = pkgs.linuxPackages_latest;
 
     kernelParams = [
-      "console=ttyFIQ0,115200n8"
+      "console=ttyS0,115200n8"
       "console=ttyS2,115200n8"
+      "console=ttyFIQ0,115200n8"
       "earlycon=uart8250,mmio32,0xfeb50000"
       "earlyprintk"
+      "debug"
+      "loglevel=8"
+      "ignore_loglevel"
+      "printk.devkmsg=on"
     ];
 
     initrd.availableKernelModules = [
@@ -121,6 +141,7 @@ in {
       "uhci_hcd" "ehci_hcd" "ehci_pci" "ohci_hcd" "ohci_pci"
       "xhci_hcd" "xhci_pci" "hid_generic" "uas" "usb_storage"
       "sdhci_of_dwcmshc"
+      "8250_base" "8250_dw"
     ];
 
     extraModulePackages = [];
