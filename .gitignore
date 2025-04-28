@@ -37,6 +37,6 @@ firmware/downloads/
 firmware/output/
 
 # Firmware output files
-firmware/*.img
-firmware/*.itb
-firmware/*.bin
+*.img
+*.itb
+*.bin
