@@ -9,10 +9,8 @@
     # Services
     ./services/cockpit.nix
     ./services/containers.nix
-    ./services/fan-control.nix
     ./services/podman.nix
     ./services/remote-desktop.nix
-    ./services/zfs.nix
   ];
 
   # System configuration
@@ -30,6 +28,13 @@
       efiSupport = true;
     };
     efi.canTouchEfiVariables = true;
+  };
+
+  # Basic desktop environment for setup
+  services.xserver = {
+    enable = true;
+    desktopManager.xfce.enable = true;
+    displayManager.lightdm.enable = true;
   };
 
   # User configuration

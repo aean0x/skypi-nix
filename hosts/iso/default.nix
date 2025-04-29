@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, settings, ... }:
 
 {
   imports = [
@@ -9,33 +9,25 @@
 
   # ISO specific configuration
   isoImage = {
-    isoName = "SkyPi-ROCK5-ITX-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.iso";
-    volumeID = "SkyPi_ROCK5_ITX";
+    isoName = "${settings.hostName}-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.iso";
+    volumeID = "${settings.hostName}_${config.system.nixos.label}";
     makeEfiBootable = true;
     makeBiosBootable = false;
   };
 
-  # Include install script and necessary tools in the ISO
+  # Disable git and documentation to avoid build issues during ISO cross-compilation
+  programs.git.enable = false;
+  documentation.enable = false;
+  documentation.man.enable = false;
+  documentation.doc.enable = false;
+
+  # Include install script
   environment.systemPackages = with pkgs; [
-    (callPackage ./install.nix { })
-    parted
-    git
-    util-linux
-    gptfdisk
-    wget
-    curl
-    iw
+    (callPackage ./install.nix { inherit settings; })
   ];
 
   # Ensure networking is enabled
   networking.useDHCP = lib.mkForce true;
-
-  # Basic desktop environment for setup
-  services.xserver = {
-    enable = true;
-    desktopManager.xfce.enable = true;
-    displayManager.lightdm.enable = true;
-  };
 
   # Enable SSH for remote setup
   services.openssh = {

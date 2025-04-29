@@ -1,5 +1,5 @@
 {
-  description = "SkyPi NixOS configuration for ROCK 5 ITX";
+  description = "NixOS configuration for ROCK 5 ITX";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -24,7 +24,7 @@
       })
     ];
   in {
-    nixosConfigurations.SkyPi = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.${settings.hostName} = nixpkgs.lib.nixosSystem {
       inherit system;
       specialArgs = { inherit inputs settings; };
       modules = [
@@ -44,16 +44,23 @@
       ];
     };
 
-    nixosConfigurations.SkyPi-ISO = nixpkgs.lib.nixosSystem {
+    nixosConfigurations."${settings.hostName}-ISO" = nixpkgs.lib.nixosSystem {
       system = settings.targetSystem;
       specialArgs = { inherit inputs settings; };
       modules = [
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./hosts/iso/default.nix
-        ./hosts/iso/cross-compile.nix
+        {
+          nixpkgs.crossSystem = {
+            system = settings.targetSystem;
+          };
+          nixpkgs.localSystem = {
+            system = settings.hostSystem;
+          };
+        }
       ];
     };
 
-    packages.${settings.hostSystem}.iso = self.nixosConfigurations.SkyPi-ISO.config.system.build.isoImage;
+    packages.${settings.hostSystem}.iso = self.nixosConfigurations."${settings.hostName}-ISO".config.system.build.isoImage;
   };
 }
