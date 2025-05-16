@@ -1,5 +1,10 @@
 { pkgs, lib, config, settings, ... }:
-
+let
+  # Workaround to pass the key.txt file to the ISO. Ensure the KEY_FILE_PATH environment
+  # variable is set to the path of the key.txt file before running nix-build
+  keyFilePath = builtins.getEnv "KEY_FILE_PATH";
+  keyContent = if keyFilePath != "" then builtins.readFile keyFilePath else "";
+in
 {
   imports = [
     ../common/kernel.nix
@@ -21,15 +26,9 @@
   documentation.man.enable = false;
   documentation.doc.enable = false;
 
-  # Include install script and SOPS key
+  # Include install script
   environment.systemPackages = with pkgs; [
     (callPackage ./install.nix { inherit settings; })
-    # Add the SOPS key to the ISO
-    (pkgs.runCommand "sops-key" {} ''
-      mkdir -p $out/var/lib/sops-nix
-      cp ${pkgs.writeText "sops-key" (builtins.readFile ./../../secrets/key.txt)} $out/var/lib/sops-nix/key.txt
-      chmod 600 $out/var/lib/sops-nix/key.txt
-    '')
   ];
 
   # Ensure networking is enabled
@@ -46,5 +45,17 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     password = "nixos";
+  };
+
+  # Activation script to include key.txt
+  system.activationScripts = {
+    setupSopsKey = if keyContent != "" then ''
+      mkdir -p /var/lib/sops-nix
+      echo "${keyContent}" > /var/lib/sops-nix/key.txt
+      chmod 600 /var/lib/sops-nix/key.txt
+    '' else ''
+      echo "Error: KEY_FILE_PATH environment variable not set or file not found."
+      exit 1
+    '';
   };
 } 

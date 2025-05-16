@@ -8,7 +8,6 @@ LOG_FILE="$HOME/.nixos-rebuild.log"
 
 # Set default values for options
 REBOOT=false
-SAVE_PLASMA=false
 UPDATE=false
 
 # Parse optional arguments
@@ -17,14 +16,11 @@ while getopts "rpuU" opt; do
         r)
             REBOOT=true
             ;;
-        p)
-            SAVE_PLASMA=true
-            ;;
         u|U)
             UPDATE=true
             ;;
         *)
-            echo "Usage: $0 [-r] [-p] [-u|-U]"
+            echo "Usage: $0 [-r] [-u|-U]"
             exit 1
             ;;
     esac
@@ -32,14 +28,6 @@ done
 
 # Navigate to the repository directory
 pushd "$REPO_DIR"
-
-# Pull the latest config from rc2nix
-if [ "$SAVE_PLASMA" = true ]; then
-    nix run github:nix-community/plasma-manager > ./home/plasma.nix
-    echo "Plasma config saved to plasma.nix."
-else
-    echo "Skipping plasma configuration save. Use -p to save..."
-fi
 
 # Find and format all files using Alejandra
 find . -type f -exec alejandra {} + &>/dev/null
