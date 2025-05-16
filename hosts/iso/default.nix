@@ -27,7 +27,7 @@
     # Add the SOPS key to the ISO
     (pkgs.runCommand "sops-key" {} ''
       mkdir -p $out/var/lib/sops-nix
-      cp ${./../../secrets/key.txt} $out/var/lib/sops-nix/key.txt
+      cp ${pkgs.writeText "sops-key" (builtins.readFile ./../../secrets/key.txt)} $out/var/lib/sops-nix/key.txt
       chmod 600 $out/var/lib/sops-nix/key.txt
     '')
   ];
