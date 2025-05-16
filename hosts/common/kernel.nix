@@ -8,14 +8,13 @@
   hardware.deviceTree.enable = true;
   hardware.deviceTree.name = "rockchip/rk3588-rock-5-itx.dtb";
   hardware.deviceTree.filter = "*-rock-5-itx*.dtb";
-  boot.loader.systemd-boot.extraFiles."${config.hardware.deviceTree.name}" = "${config.hardware.deviceTree.package}/${config.hardware.deviceTree.name}";
+  boot.loader.systemd-boot.extraFiles."dtb/rockchip/rk3588-rock-5-itx.dtb" = "${pkgs.linuxPackages_latest.kernel}/dtbs/rockchip/rk3588-rock-5-itx.dtb";
 
 
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
 
     kernelParams = [
-      "dtb=/${config.hardware.deviceTree.name}"
       "rootwait"
 
       "earlycon" # enable early console, so we can see the boot messages via serial port / HDMI
@@ -48,6 +47,8 @@
       "fusb302"
       "tcpm"
       "typec"
+      "dwc3"
+      "usb-storage"
 
       # Misc. modules
       "cw2015_battery"

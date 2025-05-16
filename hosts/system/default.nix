@@ -7,16 +7,16 @@
     ./partitions.nix
     
     # Services
-    ./services/cockpit.nix
-    ./services/containers.nix
-    ./services/podman.nix
-    ./services/remote-desktop.nix
+    # ./services/cockpit.nix
+    # ./services/containers.nix
+    # ./services/podman.nix
+    # ./services/remote-desktop.nix
   ];
 
   # System configuration
   networking = {
     hostName = settings.hostName;
-    useDHCP = true;
+    networkmanager.enable = true;
     hostId = settings.hostId;
   };
 
@@ -61,7 +61,8 @@
     tmux
     wget
     curl
+    sops
   ];
 
   system.stateVersion = "25.05";
-} 
+}
