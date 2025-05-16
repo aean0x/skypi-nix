@@ -30,6 +30,13 @@ A NixOS configuration for the ROCK5 ITX board, featuring automated installation 
    - Add your SSH public key to the `sshKeys` list
    - Review and adjust other settings as needed
 
+4. **Commit Your Changes**
+   ```bash
+   git commit -m "Initial configuration"
+   git push
+   ```
+   This ensures your configuration is available during installation.
+
 ## Bootloader Configuration
 
 Before building the ISO, you need to flash the EDK2 UEFI firmware to your ROCK5 ITX board. This is required for proper booting and installation.

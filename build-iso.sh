@@ -11,7 +11,7 @@ cd secrets
 cd ..
 
 # Get the key path
-KEY_PATH="secrets/key.txt"
+KEY_PATH="$(pwd)/secrets/key.txt"
 if [ ! -f "$KEY_PATH" ]; then
     echo "Error: key.txt not found in secrets directory"
     exit 1
